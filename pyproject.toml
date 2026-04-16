@@ -1,0 +1,32 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "slidetags-mea-overlap"
+version = "0.1.0"
+description = "Slide-tags × MEA spatial overlap tool"
+requires-python = ">=3.11"
+dependencies = [
+    "dash>=2.17",
+    "dash-bootstrap-components>=1.6",
+    "plotly>=5.22",
+    "anndata>=0.10",
+    "scanpy>=1.10",
+    "spikeinterface[full]>=0.101",
+    "scikit-image>=0.23",
+    "scipy>=1.13",
+    "numpy>=1.26",
+    "pandas>=2.2",
+    "pytest>=8.2",
+    "h5py>=3.11",
+]
+
+[project.scripts]
+slidetags-mea = "slidetags_mea_overlap.app:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["slidetags_mea_overlap"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

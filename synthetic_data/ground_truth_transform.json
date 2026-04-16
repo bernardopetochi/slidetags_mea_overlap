@@ -1,0 +1,25 @@
+{
+  "matrix": [
+    [
+      0.9902680687415704,
+      -0.13917310096006544,
+      30.0
+    ],
+    [
+      0.13917310096006544,
+      0.9902680687415704,
+      -20.0
+    ],
+    [
+      0.0,
+      0.0,
+      1.0
+    ]
+  ],
+  "rotation_deg": 8.0,
+  "translation_um": [
+    30.0,
+    -20.0
+  ],
+  "description": "Ground-truth affine transform: maps Slide-tags (fixed) \u2192 MEA (moving). Apply to Slide-tags coords to get MEA coords. The inverse maps MEA \u2192 Slide-tags."
+}
