@@ -131,4 +131,4 @@ Be honest about these limits if the user asks about scientific validity.
 3. UI polish — better error messages, loading spinners, help text.
 
 Do not work on these unless the user explicitly asks. The main bug is fixed;
-further changes should be user-directed.EOF
+further changes should be user-directed.
