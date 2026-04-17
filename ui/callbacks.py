@@ -470,14 +470,17 @@ def register_callbacks(app):  # noqa: C901 — large but each section is clear
         State("store-registered-pair", "data"),
         prevent_initial_call=True,
     )
-    def save_transform(n_clicks, reg_data):
+    def save_transform_cb(n_clicks, reg_data):
         if not reg_data:
             raise PreventUpdate
-        payload = {
-            "matrix": reg_data["matrix"],
-            "rms_error_um": reg_data["rms_error"],
-            "n_landmarks": reg_data["n_landmarks"],
-        }
+        from skimage.transform import AffineTransform
+        from analysis.registration import _make_transform_dict
+        transform = AffineTransform(matrix=np.array(reg_data["matrix"]))
+        payload = _make_transform_dict(
+            transform,
+            rms_error_um=reg_data.get("rms_error", 0.0),
+            n_landmarks=reg_data.get("n_landmarks", 0),
+        )
         return dcc.send_string(json.dumps(payload, indent=2),
                                filename="transform.json")
 
@@ -862,11 +865,14 @@ def register_callbacks(app):  # noqa: C901 — large but each section is clear
     def export_transform(n_clicks, reg_data):
         if not reg_data:
             raise PreventUpdate
-        payload = {
-            "matrix": reg_data["matrix"],
-            "rms_error_um": reg_data["rms_error"],
-            "n_landmarks": reg_data["n_landmarks"],
-        }
+        from skimage.transform import AffineTransform
+        from analysis.registration import _make_transform_dict
+        transform = AffineTransform(matrix=np.array(reg_data["matrix"]))
+        payload = _make_transform_dict(
+            transform,
+            rms_error_um=reg_data.get("rms_error", 0.0),
+            n_landmarks=reg_data.get("n_landmarks", 0),
+        )
         return dcc.send_string(json.dumps(payload, indent=2),
                                filename="transform.json")
 
@@ -977,9 +983,9 @@ def _apply_transform_json_str(json_str: str, mea_data: dict | None):
     Parse a transform JSON string, apply to MEA locations, return
     (reg_store dict, stats_ui component) for the Dash callbacks.
 
-    The JSON must contain a "matrix" key with a 3×3 homogeneous affine matrix.
-    RMS error is computed as the residual of re-applying the transform to
-    the landmark points if present, or reported as 0 (ground-truth load).
+    Invariant: the "matrix" in the JSON must map MEA (moving) → Slide-tags (fixed).
+    The matrix is applied directly to MEA unit coordinates — no inversion is performed.
+    Use save_transform() (or the UI save button) to produce compliant JSON files.
     """
     import dash_bootstrap_components as dbc
     from dash import html

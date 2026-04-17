@@ -73,12 +73,36 @@ def apply_transform(
     return transform(pts).astype(np.float32)
 
 
-def save_transform(transform: AffineTransform, path: str | Path) -> None:
-    """Save a transform to a JSON file."""
-    data = {
+def _make_transform_dict(
+    transform: AffineTransform,
+    rms_error_um: float = 0.0,
+    n_landmarks: int = 0,
+) -> dict:
+    """Build the canonical transform dict used by save_transform and the UI callbacks."""
+    return {
         "matrix": transform.params.tolist(),
-        "description": "3x3 homogeneous affine matrix; apply to (x, y, 1)^T row vectors",
+        "rms_error_um": float(rms_error_um),
+        "n_landmarks": int(n_landmarks),
+        "description": (
+            "Affine matrix mapping MEA (moving) → Slide-tags (fixed). "
+            "Apply directly to MEA unit coordinates to place them in Slide-tags space."
+        ),
     }
+
+
+def save_transform(
+    transform: AffineTransform,
+    path: str | Path,
+    rms_error_um: float = 0.0,
+    n_landmarks: int = 0,
+) -> None:
+    """Save a transform to a JSON file.
+
+    The stored matrix maps MEA (moving) → Slide-tags (fixed).
+    Apply it directly to MEA unit coordinates.
+    """
+    data = _make_transform_dict(transform, rms_error_um=rms_error_um,
+                                n_landmarks=n_landmarks)
     Path(path).write_text(json.dumps(data, indent=2))
 
 

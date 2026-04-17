@@ -254,8 +254,8 @@ def _run_correlation_test(gene: str, expect_significant: bool, max_p: float):
     mea = load_mea(str(SYNTH_DIR / "synthetic_mea"))
 
     gt_data = json.loads((SYNTH_DIR / "ground_truth_transform.json").read_text())
-    inv_transform = AffineTransform(matrix=np.linalg.inv(np.array(gt_data["matrix"])))
-    mea_locs_registered = apply_transform(mea.locations, inv_transform)
+    transform = AffineTransform(matrix=np.array(gt_data["matrix"]))
+    mea_locs_registered = apply_transform(mea.locations, transform)
 
     # Build expression matrix for just the gene of interest
     import scipy.sparse as sp

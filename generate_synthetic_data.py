@@ -419,21 +419,34 @@ def main() -> None:
     analyzer.save_as(folder=str(mea_path), format="binary_folder")
     print(f"  Saved: {mea_path}")
 
-    print("\nSaving ground-truth transform…")
+    print("\nSaving ground-truth transform (MEA → Slide-tags)…")
     gt = _gt_transform()
+    # The JSON stores the INVERSE (MEA→ST) so callers can apply it directly
+    # to MEA unit coordinates without any additional inversion.
+    inv_matrix = np.linalg.inv(gt.params)
     transform_path = OUT_DIR / "ground_truth_transform.json"
     transform_data = {
-        "matrix": gt.params.tolist(),
+        "matrix": inv_matrix.tolist(),
         "rotation_deg": GT_ROTATION_DEG,
         "translation_um": GT_TRANSLATION.tolist(),
         "description": (
-            "Ground-truth affine transform: maps Slide-tags (fixed) → MEA (moving). "
-            "Apply to Slide-tags coords to get MEA coords. "
-            "The inverse maps MEA → Slide-tags."
+            "Affine transform mapping MEA (moving) → Slide-tags (fixed). "
+            "Apply directly to MEA unit coordinates to place them in Slide-tags space."
         ),
     }
     transform_path.write_text(json.dumps(transform_data, indent=2))
     print(f"  Saved: {transform_path}")
+
+    # Roundtrip assertion: loading and applying the stored matrix to MEA locs
+    # must recover the original Slide-tags locs to within floating-point tolerance.
+    inv_transform = AffineTransform(matrix=np.array(transform_data["matrix"]))
+    recovered = inv_transform(unit_locs_mea.astype(np.float64)).astype(np.float32)
+    rms_roundtrip = float(np.sqrt(np.mean(np.sum((recovered - unit_locs_st) ** 2, axis=1))))
+    assert rms_roundtrip < 1e-3, (
+        f"Roundtrip RMS {rms_roundtrip:.6f} μm exceeds tolerance — "
+        "inverse matrix is wrong."
+    )
+    print(f"  Roundtrip RMS = {rms_roundtrip:.2e} μm  ✓")
 
     print("\nVerifying load via app loaders…")
     sys.path.insert(0, str(Path(__file__).parent))
